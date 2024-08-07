@@ -5,12 +5,30 @@ import { useParams, Link } from "react-router-dom";
 
 function PokemonDetails({ allPokemon }) {
     const { name } = useParams();
-    console.log(allPokemon);
     const pokemon = allPokemon.find(p => p.name.toLowerCase() === name.toLowerCase());
+    const [japaneseName, setJapaneseName] = useState('');
 
-    if (!pokemon) {
-        return <div>Sorry, there isn't any data available for that Pokémon. </div>;
-    }
+    useEffect(() => {
+        const fetchSpeciesData = async () => {
+            try {
+                const response = await fetch(pokemon.species.url)
+                const data = await response.json();
+                const nameInJapanese = data.names.find(n => n.language.name === 'ja').name;
+                setJapaneseName(nameInJapanese);
+            } 
+            catch (error) {
+                console.error("Error fetching species data: ", error.message);
+            }
+        };
+        if (pokemon) {
+            fetchSpeciesData();
+        }
+    }, [pokemon]);
+
+    //  if (!pokemon) {
+    //     return <div>Sorry, there isn't any data available for that Pokémon. </div>;
+    // }
+
     return (
         <div>
             <div>
@@ -25,11 +43,22 @@ function PokemonDetails({ allPokemon }) {
                  ))}
             </div>
             <div><h1>{pokemon.name}</h1></div>
+                 {japaneseName}
             </div>
             </div>
 
         </div>
     );
 };
+
+const fetchJapaneseName = async (url) => {
+    const response = await fetch({url});
+    const data = await response.json();
+    const pokemonSpeciesDetails = await Promise.all(data.results.map(async (pokemon) => {
+        const res = await fetch(pokemon.url);
+        return await res.json();
+        }));
+        return { pokemonSpeciesDetails }
+    }
 
 export default PokemonDetails;
