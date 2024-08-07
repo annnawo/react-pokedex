@@ -1,20 +1,10 @@
 import React, { useState, useEffect } from "react";
 import ReactPaginate from "react-paginate";
+import { Link } from "react-router-dom";
 
 const PokemonList = ({ currentCards }) => {
   return (
     <div>
-      <div className="search-and-filter-bar">
-        <h1>Pokédex</h1>
-        <div>
-          <label htmlFor="name-number-search">Search by Name or Number</label>
-          <input type="text" id="name-number-search" />
-        </div>
-        <div>
-          <button>Advanced Filters</button>
-        </div>
-      </div>
-
       {currentCards.map((pokemon) => (
         <PokemonCard
           key={pokemon.id}
@@ -31,6 +21,7 @@ const PokemonList = ({ currentCards }) => {
 function PokemonCard(props) {
   return (
     <div>
+      <Link to={`/pokemon-details/${props.pokemonName.toLowerCase()}`}>
       <div className="card-name-and-number">
         <h3 className="pokemon-number">{props.pokemonNumber}</h3>
         <h2 className="pokemon-name">{props.pokemonName}</h2>
@@ -45,69 +36,83 @@ function PokemonCard(props) {
       <div>
         <img src={props.pokemonSprites} alt={props.pokemonName} />
       </div>
+      </Link>
     </div>
   );
 }
 
-function PaginatedPokemonList() {
-  const [allPokemon, setPokemon] = useState([]);
+const fetchPokemonData = async (offset) => {
+  const response = await fetch(`https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=20`);
+  const data = await response.json();
+  const pokemonDetails = await Promise.all(data.results.map(async (pokemon) => {
+    const res = await fetch(pokemon.url);
+    return await res.json();
+  }));
+  return { pokemonDetails, totalCount: data.count };
+};
+
+const PaginatedPokemonList = ({ allPokemon, setAllPokemon }) => {
+  // const [allPokemon, setAllPokemon] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [pageCount, setPageCount] = useState(0);
+  const [searchInputText, setSearchInputText] = useState('');
   const [error, setError] = useState(null);
-
-  const cacheKey = `pokemon_page_${currentPage}`;
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async (offset = 0) => {
+    const fetchAllPokemonData = async () => {
       try {
-        const cachedData = localStorage.getItem(cacheKey);
+        const limit = 20;
+        let offset = 0;
+        let allPokemonData = [];
+        let totalCount = 0;
 
-        if (cachedData) {
-          const parsedData = JSON.parse(cachedData);
-          setPokemon(parsedData.pokemonDetails);
-          setPageCount(Math.ceil(parsedData.totalCount / 20));
-        } else {
-          const response = await fetch(
-            `https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=20`
-          );
-          if (!response.ok) {
-            throw new Error(`HTTP error! status ${response.status}`);
-          }
-          const data = await response.json();
+        do {
+          const { pokemonDetails, totalCount: newTotalCount } = await fetchPokemonData(offset);
+          allPokemonData = [...allPokemonData, ...pokemonDetails];
+          totalCount = newTotalCount;
+          offset += limit;
+        } while (offset < totalCount);
 
-          // Fetch detailed data for each Pokemon
-          const pokemonDetails = await Promise.all(
-            data.results.map(async (pokemon) => {
-              const res = await fetch(pokemon.url);
-              return await res.json();
-            })
-          );
-
-          setPokemon(pokemonDetails);
-          setPageCount(Math.ceil(data.count / 20));
-
-          // Cache the fetched data
-          localStorage.setItem(
-            cacheKey,
-            JSON.stringify({ pokemonDetails, totalCount: data.count })
-          );
-        }
+        setAllPokemon(allPokemonData);
+        setPageCount(Math.ceil(totalCount / limit));
+        setLoading(false);
       } catch (error) {
-        console.error("Fetch error: ", error);
         setError(error.message);
+        setLoading(false);
       }
     };
 
-    fetchData(currentPage * 20);
-  }, [currentPage, cacheKey]);
+    fetchAllPokemonData();
+  }, []);
 
   const handlePageClick = (event) => {
     setCurrentPage(event.selected);
   };
 
+  const filteredPokemon = allPokemon.filter(pokemon =>
+    pokemon.name.toLowerCase().includes(searchInputText.toLowerCase()) ||
+    pokemon.id.toString() === searchInputText
+  );
+
+  const currentCards = filteredPokemon.slice(currentPage * 20, (currentPage + 1) * 20);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <>
-      <PokemonList currentCards={allPokemon} />
+      <div className="search-and-filter-bar">
+        <h1>Pokédex</h1>
+        <div>
+          <SearchBar searchInputText={searchInputText} onSearchInputText={setSearchInputText} />
+        </div>
+        <div>
+          <button>Advanced Filters</button>
+        </div>
+      </div>
+      <PokemonList currentCards={currentCards} />
       <ReactPaginate
         breakLabel="..."
         nextLabel="next >"
@@ -119,6 +124,17 @@ function PaginatedPokemonList() {
       />
     </>
   );
+}
+
+function SearchBar({ searchInputText, onSearchInputText }) {
+  return (
+    <>
+      <label htmlFor="name-number-search">Search by Name or Number</label>
+      <input type="text" id="name-number-search" value={searchInputText} name="name-number-search" onChange={(e) => {
+        onSearchInputText(e.target.value);
+      }} />
+    </>
+  )
 }
 
 export default PaginatedPokemonList;
