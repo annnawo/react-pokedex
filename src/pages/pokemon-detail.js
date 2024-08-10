@@ -13,9 +13,7 @@ function PokemonDetails({ allPokemon }) {
     const [flavorText, setFlavorText] = useState('');
     const [genderOptions, setGenderOptions] = useState('');
     const [genus, setGenus] = useState('');
-
-    console.log(genderOptions);
-    console.log(genus);
+    const [evolutionURL, setEvolutionURL] = useState('');
 
     useEffect(() => {
         const fetchSpeciesData = async () => {
@@ -24,13 +22,14 @@ function PokemonDetails({ allPokemon }) {
                 const data = await response.json();
                 const nameInJapanese = data.names.find(n => n.language.name === 'ja').name;
                 setJapaneseName(nameInJapanese);
-                let speciesFlavorText = data.flavor_text_entries[0].flavor_text;
+                let speciesFlavorText = data.flavor_text_entries.find(n => n.language.name === 'en').flavor_text;
                 const newlineFormfeedRegex = /[\n\f]/g;
                 speciesFlavorText = speciesFlavorText.replace(newlineFormfeedRegex, ' ');
                 setFlavorText(speciesFlavorText);
                 setGenderOptions(data.gender_rate);
                 const category = data.genera[7].genus;
                 setGenus(category);
+                setEvolutionURL(data.evolution_chain.url);
             }
             catch (error) {
                 console.error("Error fetching species data: ", error.message);
@@ -40,6 +39,87 @@ function PokemonDetails({ allPokemon }) {
             fetchSpeciesData();
         }
     }, [pokemon]);
+
+    useEffect(() => {
+        const fetchEvolutionData = async () => {
+            try {
+                const response = await fetch(evolutionURL)
+                const data = await response.json();
+                // console.log(data);
+                console.log(data.chain.species.name); // bulbasaur
+                if (data.chain.evolves_to.length > 0) {
+                    // console.log(data.chain.evolves_to[0].species.name); // First evolution stage (e.g., ivysaur)
+                    let count = 0;
+                    while (count < data.chain.evolves_to.length) {
+                        data.chain.evolves_to[count].evolution_details.forEach(detail => {
+                            console.log(count);
+                            if (detail.location) {
+                                console.log(`  Location: ${detail.location.name}`);
+                            }
+                            if (detail.item) {
+                                console.log(`  Item: ${detail.item.name}`);
+                            }
+                            if (detail.min_level) {
+                                console.log(`  Minimum Level: ${detail.min_level}`);
+                            }
+                            if (detail.time_of_day) {
+                                console.log(`  Time of Day: ${detail.time_of_day}`);
+                            }
+                            
+                        })
+                        console.log(data.chain.evolves_to[count].species.name);
+                        count++;
+                    }
+                
+                    if (data.chain.evolves_to[0].evolves_to.length > 0) {
+                        // console.log(data.chain.evolves_to[0].evolves_to[0].species.name); // Third evolution stage (e.g., venosaur)
+                        count = 0;
+                        while (count < data.chain.evolves_to[0].evolves_to.length) {
+                            data.chain.evolves_to[0].evolves_to[count].evolution_details.forEach(detail => {
+                                if (detail.location) {
+                                    console.log(`  Location: ${detail.location.name}`);
+                                }
+                                if (detail.item) {
+                                    console.log(`  Item: ${detail.item.name}`);
+                                }
+                                if (detail.min_level) {
+                                    console.log(`  Minimum Level: ${detail.min_level}`);
+                                }
+                                if (detail.time_of_day) {
+                                    console.log(`  Time of Day: ${detail.time_of_day}`);
+                                }
+                            })
+                            console.log(data.chain.evolves_to[0].evolves_to[count].species.name);
+                            count++;
+                        }
+                    } else {
+                        console.log("no third");
+                    }
+                } else {
+                    console.log("no second evolution stage");
+                }
+                console.log()
+
+                // const nameInJapanese = data.names.find(n => n.language.name === 'ja').name;
+                // setJapaneseName(nameInJapanese);
+                // let speciesFlavorText = data.flavor_text_entries[0].flavor_text;
+                // const newlineFormfeedRegex = /[\n\f]/g;
+                // speciesFlavorText = speciesFlavorText.replace(newlineFormfeedRegex, ' ');
+                // setFlavorText(speciesFlavorText);
+                // setGenderOptions(data.gender_rate);
+                // const category = data.genera[7].genus;
+                // setGenus(category);
+                // setEvolutionURL(data.evolution_chain.url);
+            }
+            catch (error) {
+                console.error("Error fetching species data: ", error.message);
+            }
+        };
+        if (evolutionURL) {
+            fetchEvolutionData();
+        }
+    }, [evolutionURL]);
+    
 
     if (!pokemon) {
         return <div>Sorry, there isn't any data available for that Pokémon. </div>;
@@ -183,9 +263,9 @@ function DetailTable({ pokemon, flavorText, genderOptions, genus }) {
                 </table></div>
             </>)
         } else if (detailTab === 'evolutions') {
-            setDetailTabContents(<>
-            
-            </>)
+            setDetailTabContents(<div>
+               
+            </div>)
         }
     }
 
@@ -199,12 +279,6 @@ function DetailTable({ pokemon, flavorText, genderOptions, genus }) {
 
     function hectogramToPound(hectograms) {
         return (hectograms / 4.536).toFixed(1);
-    }
-    console.log(pokemon.abilities);
-    {
-        pokemon.abilities.map((ability) => {
-            console.log(ability.ability.name);
-        })
     }
 
     return (
@@ -227,6 +301,16 @@ const fetchJapaneseName = async (url) => {
         return await res.json();
     }));
     return { pokemonSpeciesDetails }
+}
+
+const fetchEvolutionChain = async (url) => {
+    const response = await fetch({ url });
+    const data = await response.json();
+    const evolutionDetails = await Promise.all(data.results.map(async (pokemon) => {
+        const res = await fetch(pokemon.url);
+        return await res.json();
+    }));
+    return { evolutionDetails }
 }
 
 export default PokemonDetails;
