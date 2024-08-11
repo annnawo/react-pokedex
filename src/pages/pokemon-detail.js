@@ -4,7 +4,6 @@ import FemaleSymbol from '../assets/images/icons/noun-female.png';
 import MaleSymbol from '../assets/images/icons/noun-male.png';
 import GenderlessSymbol from '../assets/images/icons/noun-genderless.png';
 
-// useeffect to call a function that calls the species url for the pokemon
 
 function PokemonDetails({ allPokemon }) {
     const { name } = useParams();
@@ -14,12 +13,36 @@ function PokemonDetails({ allPokemon }) {
     const [genderOptions, setGenderOptions] = useState('');
     const [genus, setGenus] = useState('');
     const [evolutionURL, setEvolutionURL] = useState('');
+    const [evolutionDetails, setEvolutionDetails] = useState([]);
+
+
+    console.log(evolutionDetails);
+
+    let evolutionChain = [];
+    class Evolution {
+        constructor(method, trigger) {
+            this.method = method;   
+            this.trigger = trigger; 
+        }
+    }
+    class Pokemon {
+        constructor(name, type) {
+            this.name = name;
+            this.type = type;
+            this.evolutions = [];
+        }
+        addEvolution(evolution) {
+            this.evolutions.push(evolution);
+        }
+    }
 
     useEffect(() => {
         const fetchSpeciesData = async () => {
             try {
-                const response = await fetch(pokemon.species.url)
+                const response = await fetch(pokemon.species.url);
                 const data = await response.json();
+    
+                // Extract relevant data and update states
                 const nameInJapanese = data.names.find(n => n.language.name === 'ja').name;
                 setJapaneseName(nameInJapanese);
                 let speciesFlavorText = data.flavor_text_entries.find(n => n.language.name === 'en').flavor_text;
@@ -29,97 +52,62 @@ function PokemonDetails({ allPokemon }) {
                 setGenderOptions(data.gender_rate);
                 const category = data.genera[7].genus;
                 setGenus(category);
+    
+                // Set the evolution chain URL
                 setEvolutionURL(data.evolution_chain.url);
-            }
-            catch (error) {
+            } catch (error) {
                 console.error("Error fetching species data: ", error.message);
             }
         };
+    
         if (pokemon) {
             fetchSpeciesData();
         }
-    }, [pokemon]);
-
+    }, [pokemon]); 
+    
     useEffect(() => {
         const fetchEvolutionData = async () => {
             try {
-                const response = await fetch(evolutionURL)
+                const response = await fetch(evolutionURL);
                 const data = await response.json();
-                // console.log(data);
-                console.log(data.chain.species.name); // bulbasaur
-                if (data.chain.evolves_to.length > 0) {
-                    // console.log(data.chain.evolves_to[0].species.name); // First evolution stage (e.g., ivysaur)
-                    let count = 0;
-                    while (count < data.chain.evolves_to.length) {
-                        data.chain.evolves_to[count].evolution_details.forEach(detail => {
-                            console.log(count);
-                            if (detail.location) {
-                                console.log(`  Location: ${detail.location.name}`);
-                            }
-                            if (detail.item) {
-                                console.log(`  Item: ${detail.item.name}`);
-                            }
-                            if (detail.min_level) {
-                                console.log(`  Minimum Level: ${detail.min_level}`);
-                            }
-                            if (detail.time_of_day) {
-                                console.log(`  Time of Day: ${detail.time_of_day}`);
-                            }
-                            
-                        })
-                        console.log(data.chain.evolves_to[count].species.name);
-                        count++;
-                    }
-                
-                    if (data.chain.evolves_to[0].evolves_to.length > 0) {
-                        // console.log(data.chain.evolves_to[0].evolves_to[0].species.name); // Third evolution stage (e.g., venosaur)
-                        count = 0;
-                        while (count < data.chain.evolves_to[0].evolves_to.length) {
-                            data.chain.evolves_to[0].evolves_to[count].evolution_details.forEach(detail => {
-                                if (detail.location) {
-                                    console.log(`  Location: ${detail.location.name}`);
-                                }
-                                if (detail.item) {
-                                    console.log(`  Item: ${detail.item.name}`);
-                                }
-                                if (detail.min_level) {
-                                    console.log(`  Minimum Level: ${detail.min_level}`);
-                                }
-                                if (detail.time_of_day) {
-                                    console.log(`  Time of Day: ${detail.time_of_day}`);
-                                }
-                            })
-                            console.log(data.chain.evolves_to[0].evolves_to[count].species.name);
-                            count++;
+    
+                const evolutionDetails = []; // Array to store evolution details
+    
+                const processEvolutionChain = async (chain) => {
+                    const pokemonName = chain.species.name;
+    
+                    // Fetch details for this Pokemon
+                    const detailsResponse = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonName}`);
+                    const detailsData = await detailsResponse.json();
+    
+                    // Add to the evolution details array
+                    evolutionDetails.push({
+                        name: pokemonName,
+                        details: detailsData
+                    });
+    
+                    // Process next evolutions
+                    if (chain.evolves_to.length > 0) {
+                        for (const nextStage of chain.evolves_to) {
+                            await processEvolutionChain(nextStage);
                         }
-                    } else {
-                        console.log("no third");
                     }
-                } else {
-                    console.log("no second evolution stage");
-                }
-                console.log()
-
-                // const nameInJapanese = data.names.find(n => n.language.name === 'ja').name;
-                // setJapaneseName(nameInJapanese);
-                // let speciesFlavorText = data.flavor_text_entries[0].flavor_text;
-                // const newlineFormfeedRegex = /[\n\f]/g;
-                // speciesFlavorText = speciesFlavorText.replace(newlineFormfeedRegex, ' ');
-                // setFlavorText(speciesFlavorText);
-                // setGenderOptions(data.gender_rate);
-                // const category = data.genera[7].genus;
-                // setGenus(category);
-                // setEvolutionURL(data.evolution_chain.url);
-            }
-            catch (error) {
-                console.error("Error fetching species data: ", error.message);
+                };
+    
+                // Start processing the evolution chain
+                await processEvolutionChain(data.chain);
+    
+                // Update state with evolution details
+                setEvolutionDetails(evolutionDetails);
+            } catch (error) {
+                console.error("Error fetching evolution data:", error.message);
             }
         };
+    
         if (evolutionURL) {
             fetchEvolutionData();
         }
-    }, [evolutionURL]);
-    
+    }, [evolutionURL]);  
 
     if (!pokemon) {
         return <div>Sorry, there isn't any data available for that Pokémon. </div>;
@@ -149,21 +137,39 @@ function PokemonDetails({ allPokemon }) {
             </div>
             <div>{japaneseName}</div>
             <div><DetailTable pokemon={pokemon} flavorText={flavorText} genderOptions={genderOptions} genus={genus} /></div>
+        
+
+
+        {/* Render the evolution details */}
+        <div>
+            <h3>Evolution Chain</h3>
+            {evolutionDetails.map((evolution, index) => (
+                <div key={index}>
+                    <h4>{evolution.name}</h4>
+                    <img src={evolution.details.sprites.front_default} alt={`Sprite for ${evolution.name}`} />
+                    <p>Type: {evolution.details.types.map(type => type.type.name).join(', ')}</p>
+                    {/* Add more details */}
+                </div>
+            ))}
+            </div>
+        
+            {/* <PokemonEvolutionTypes /> */}
         </div>
     );
 };
 
 function DetailTable({ pokemon, flavorText, genderOptions, genus }) {
     const [detailTab, setDetailTab] = useState('about');
-    const [detailTabContents, setDetailTabContents] = useState()
+    const [detailTabContents, setDetailTabContents] = useState(null)
 
     useEffect(() => {
         handleChangeTab({ target: { value: 'about' } });
     }, []);
 
     const handleChangeTab = (e) => {
-        setDetailTab(e.target.value);
-        if (detailTab === 'about') {
+        const selectedTab = e.target.value;
+        setDetailTab(selectedTab);
+        if (selectedTab === 'about') {
             setDetailTabContents(<>
                 <div>{flavorText}</div>
                 <div>
@@ -179,8 +185,8 @@ function DetailTable({ pokemon, flavorText, genderOptions, genus }) {
                         {genderOptions === -1 ? <img src={GenderlessSymbol} alt="Genderless/Gender Unknown" /> : genderOptions === 8 ? <img src={FemaleSymbol} alt="Only Female" /> : genderOptions === 0 ? <img src={MaleSymbol} alt="Only Male" /> : <div><img src={FemaleSymbol} alt="Female symbol" /><img src={MaleSymbol} alt="Male symbol" /></div>}
                     </div>
                 </div>
-            </>)
-        } else if (detailTab === 'stats') {
+            </>);
+        } else if (selectedTab === 'stats') {
             setDetailTabContents(<>
                 <div><p>Super effective against:</p></div>
                 <div><p>Not very effective against:</p></div>
@@ -261,11 +267,11 @@ function DetailTable({ pokemon, flavorText, genderOptions, genus }) {
                         </tr>
                     </tbody>
                 </table></div>
-            </>)
-        } else if (detailTab === 'evolutions') {
+            </>);
+        } else if (selectedTab === 'evolutions') {
             setDetailTabContents(<div>
                
-            </div>)
+            </div>);
         }
     }
 
@@ -312,5 +318,7 @@ const fetchEvolutionChain = async (url) => {
     }));
     return { evolutionDetails }
 }
+
+
 
 export default PokemonDetails;
