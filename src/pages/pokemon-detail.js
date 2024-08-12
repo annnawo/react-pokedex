@@ -16,7 +16,7 @@ function PokemonDetails({ allPokemon }) {
     const [evolutionDetails, setEvolutionDetails] = useState([]);
 
 
-    console.log(evolutionDetails);
+
 
     let evolutionChain = [];
     class Evolution {
@@ -140,7 +140,7 @@ function PokemonDetails({ allPokemon }) {
         
 
 
-        {/* Render the evolution details */}
+  
         <div>
             <h3>Evolution Chain</h3>
             {evolutionDetails.map((evolution, index) => (
@@ -153,7 +153,6 @@ function PokemonDetails({ allPokemon }) {
             ))}
             </div>
         
-            {/* <PokemonEvolutionTypes /> */}
         </div>
     );
 };

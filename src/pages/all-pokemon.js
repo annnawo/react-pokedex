@@ -1,7 +1,93 @@
 import React, { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import ReactPaginate from "react-paginate";
 import { Link } from "react-router-dom";
 
+
+// Fetch all Pokémon data
+const fetchAllPokemonData = async () => {
+  const limit = 20; // Fetch in chunks of 20 Pokémon
+  let offset = 0;
+  let allPokemonData = [];
+  let totalCount = 0;
+
+  // Fetch initial data to get total count
+  const { pokemonDetails, count } = await fetchPokemonData(offset);
+  totalCount = count;
+  allPokemonData = [...pokemonDetails];
+
+  // Fetch remaining data
+  while (offset < totalCount) {
+    offset += limit;
+    const { pokemonDetails: newPokemonDetails } = await fetchPokemonData(offset);
+    allPokemonData = [...allPokemonData, ...newPokemonDetails];
+  }
+
+  return allPokemonData;
+};
+
+// Fetch Pokémon data with pagination
+const fetchPokemonData = async (offset) => {
+  const response = await fetch(`https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=20`);
+  const data = await response.json();
+  const pokemonDetails = await Promise.all(data.results.map(async (pokemon) => {
+    const res = await fetch(pokemon.url);
+    return await res.json();
+  }));
+  return { pokemonDetails, count: data.count };
+};
+
+const PaginatedPokemonList = ({ allPokemon, setAllPokemon }) => {
+  const [currentPage, setCurrentPage] = useState(0);
+  const [searchInputText, setSearchInputText] = useState('');
+
+  const { data: allPokemonData, error, isLoading } = useQuery({
+    queryKey: ['allPokemon'],
+    queryFn: fetchAllPokemonData,
+    staleTime: Infinity,
+    cacheTime: Infinity, 
+  });
+
+  // Set the `allPokemon` state only after data has been fetched
+  useEffect(() => {
+    if (allPokemonData) {
+      setAllPokemon(allPokemonData);
+    }
+  }, [allPokemonData, setAllPokemon]);
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+
+  const totalCount = allPokemon.length;
+  const filteredPokemon = allPokemon.filter(pokemon =>
+    pokemon.name.toLowerCase().includes(searchInputText.toLowerCase()) ||
+    pokemon.id.toString() === searchInputText
+  );
+
+  const currentCards = filteredPokemon.slice(currentPage * 20, (currentPage + 1) * 20);
+
+  const handlePageClick = (event) => {
+    setCurrentPage(event.selected);
+  };
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={searchInputText}
+        onChange={(e) => setSearchInputText(e.target.value)}
+        placeholder="Search Pokemon"
+      />
+      <PokemonList currentCards={currentCards} />
+      <ReactPaginate
+        pageCount={Math.ceil(totalCount / 20)}
+        onPageChange={handlePageClick}
+        containerClassName={"pagination"}
+        activeClassName={"active"}
+      />
+    </div>
+  );
+};
 const PokemonList = ({ currentCards }) => {
   return (
     <div>
@@ -22,119 +108,23 @@ function PokemonCard(props) {
   return (
     <div>
       <Link to={`/pokemon-details/${props.pokemonName.toLowerCase()}`}>
-      <div className="card-name-and-number">
-        <h3 className="pokemon-number">{props.pokemonNumber}</h3>
-        <h2 className="pokemon-name">{props.pokemonName}</h2>
-      </div>
-      <div className="card-types">
-        <ul>
-          {props.pokemonTypes.map((typeInfo, index) => (
-            <li key={index}>{typeInfo.type.name}</li>
-          ))}
-        </ul>
-      </div>
-      <div>
-        <img src={props.pokemonSprites} alt={props.pokemonName} />
-      </div>
+        <div className="card-name-and-number">
+          <h3 className="pokemon-number">{props.pokemonNumber}</h3>
+          <h2 className="pokemon-name">{props.pokemonName}</h2>
+        </div>
+        <div className="card-types">
+          <ul>
+            {props.pokemonTypes.map((typeInfo, index) => (
+              <li key={index}>{typeInfo.type.name}</li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <img src={props.pokemonSprites} alt={props.pokemonName} />
+        </div>
       </Link>
     </div>
   );
-}
-
-const fetchPokemonData = async (offset) => {
-  const response = await fetch(`https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=20`);
-  const data = await response.json();
-  const pokemonDetails = await Promise.all(data.results.map(async (pokemon) => {
-    const res = await fetch(pokemon.url);
-    return await res.json();
-  }));
-  return { pokemonDetails, totalCount: data.count };
-};
-
-const PaginatedPokemonList = ({ allPokemon, setAllPokemon }) => {
-  // const [allPokemon, setAllPokemon] = useState([]);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [pageCount, setPageCount] = useState(0);
-  const [searchInputText, setSearchInputText] = useState('');
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchAllPokemonData = async () => {
-      try {
-        const limit = 20;
-        let offset = 0;
-        let allPokemonData = [];
-        let totalCount = 0;
-
-        do {
-          const { pokemonDetails, totalCount: newTotalCount } = await fetchPokemonData(offset);
-          allPokemonData = [...allPokemonData, ...pokemonDetails];
-          totalCount = newTotalCount;
-          offset += limit;
-        } while (offset < totalCount);
-
-        setAllPokemon(allPokemonData);
-        setPageCount(Math.ceil(totalCount / limit));
-        setLoading(false);
-      } catch (error) {
-        setError(error.message);
-        setLoading(false);
-      }
-    };
-
-    fetchAllPokemonData();
-  }, []);
-
-  const handlePageClick = (event) => {
-    setCurrentPage(event.selected);
-  };
-
-  const filteredPokemon = allPokemon.filter(pokemon =>
-    pokemon.name.toLowerCase().includes(searchInputText.toLowerCase()) ||
-    pokemon.id.toString() === searchInputText
-  );
-
-  const currentCards = filteredPokemon.slice(currentPage * 20, (currentPage + 1) * 20);
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  return (
-    <>
-      <div className="search-and-filter-bar">
-        <h1>Pokédex</h1>
-        <div>
-          <SearchBar searchInputText={searchInputText} onSearchInputText={setSearchInputText} />
-        </div>
-        <div>
-          <button>Advanced Filters</button>
-        </div>
-      </div>
-      <PokemonList currentCards={currentCards} />
-      <ReactPaginate
-        breakLabel="..."
-        nextLabel="next >"
-        onPageChange={handlePageClick}
-        pageRangeDisplayed={5}
-        pageCount={pageCount}
-        previousLabel="< previous"
-        renderOnZeroPageCount={null}
-      />
-    </>
-  );
-}
-
-function SearchBar({ searchInputText, onSearchInputText }) {
-  return (
-    <>
-      <label htmlFor="name-number-search">Search by Name or Number</label>
-      <input type="text" id="name-number-search" value={searchInputText} name="name-number-search" onChange={(e) => {
-        onSearchInputText(e.target.value);
-      }} />
-    </>
-  )
 }
 
 export default PaginatedPokemonList;
