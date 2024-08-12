@@ -15,27 +15,6 @@ function PokemonDetails({ allPokemon }) {
     const [evolutionURL, setEvolutionURL] = useState('');
     const [evolutionDetails, setEvolutionDetails] = useState([]);
 
-
-
-
-    let evolutionChain = [];
-    class Evolution {
-        constructor(method, trigger) {
-            this.method = method;   
-            this.trigger = trigger; 
-        }
-    }
-    class Pokemon {
-        constructor(name, type) {
-            this.name = name;
-            this.type = type;
-            this.evolutions = [];
-        }
-        addEvolution(evolution) {
-            this.evolutions.push(evolution);
-        }
-    }
-
     useEffect(() => {
         const fetchSpeciesData = async () => {
             try {
@@ -70,23 +49,34 @@ function PokemonDetails({ allPokemon }) {
             try {
                 const response = await fetch(evolutionURL);
                 const data = await response.json();
-    
-                const evolutionDetails = []; // Array to store evolution details
+                
+                // Array to store evolution details
+                const newEvolutionDetails = []; 
     
                 const processEvolutionChain = async (chain) => {
                     const pokemonName = chain.species.name;
-    
+                    
                     // Fetch details for this Pokemon
                     const detailsResponse = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonName}`);
                     const detailsData = await detailsResponse.json();
-    
-                    // Add to the evolution details array
-                    evolutionDetails.push({
+                    
+                    // Add evolution details
+                    newEvolutionDetails.push({
                         name: pokemonName,
-                        details: detailsData
+                        details: detailsData,
+                        evolutionDetails: chain.evolution_details.map(detail => ({
+                            trigger: detail.trigger.name,
+                            item: detail.item ? detail.item.name : null,
+                            location: detail.location ? detail.location.name : null,
+                            min_affection: detail.min_affection ? detail.min_affection : null,
+                            min_beauty: detail.min_beauty ? detail.min_beauty : null,
+                            min_happiness: detail.min_happiness ? detail.min_happiness: null,
+                            min_level: detail.min_level ? detail.min_level : null,
+                            time_of_day: detail.time_of_day ? detail.time_of_day : null,
+                        }))
                     });
-    
-                    // Process next evolutions
+                    
+                    // Process next evolutions recursively
                     if (chain.evolves_to.length > 0) {
                         for (const nextStage of chain.evolves_to) {
                             await processEvolutionChain(nextStage);
@@ -96,18 +86,19 @@ function PokemonDetails({ allPokemon }) {
     
                 // Start processing the evolution chain
                 await processEvolutionChain(data.chain);
-    
-                // Update state with evolution details
-                setEvolutionDetails(evolutionDetails);
+                
+                // Update state with all evolution details
+                setEvolutionDetails(newEvolutionDetails);
             } catch (error) {
                 console.error("Error fetching evolution data:", error.message);
             }
         };
-    
+        
         if (evolutionURL) {
             fetchEvolutionData();
         }
-    }, [evolutionURL]);  
+    }, [evolutionURL]);
+    
 
     if (!pokemon) {
         return <div>Sorry, there isn't any data available for that Pokémon. </div>;
@@ -136,28 +127,12 @@ function PokemonDetails({ allPokemon }) {
                 </div>
             </div>
             <div>{japaneseName}</div>
-            <div><DetailTable pokemon={pokemon} flavorText={flavorText} genderOptions={genderOptions} genus={genus} /></div>
-        
-
-
-  
-        <div>
-            <h3>Evolution Chain</h3>
-            {evolutionDetails.map((evolution, index) => (
-                <div key={index}>
-                    <h4>{evolution.name}</h4>
-                    <img src={evolution.details.sprites.front_default} alt={`Sprite for ${evolution.name}`} />
-                    <p>Type: {evolution.details.types.map(type => type.type.name).join(', ')}</p>
-                    {/* Add more details */}
-                </div>
-            ))}
-            </div>
-        
+            <div><DetailTable pokemon={pokemon} flavorText={flavorText} genderOptions={genderOptions} genus={genus} evolutionDetails={evolutionDetails} /></div> 
         </div>
     );
 };
 
-function DetailTable({ pokemon, flavorText, genderOptions, genus }) {
+function DetailTable({ pokemon, flavorText, genderOptions, genus, evolutionDetails }) {
     const [detailTab, setDetailTab] = useState('about');
     const [detailTabContents, setDetailTabContents] = useState(null)
 
@@ -269,7 +244,45 @@ function DetailTable({ pokemon, flavorText, genderOptions, genus }) {
             </>);
         } else if (selectedTab === 'evolutions') {
             setDetailTabContents(<div>
-               
+            <h3>Evolution Chain</h3>
+            {evolutionDetails.map((evolution, index) => (
+                <div key={index}>
+                     <ul>
+                        {evolution.evolutionDetails.map((detail, detailIndex) => (
+                           <React.Fragment key={detailIndex}>
+                            {detail.item != null && detail.item.trim() != "" ? <li>
+                               Item: {detail.item.replace('-', ' ')}
+                           </li> : <></>}
+                           {detail.location != null && detail.location.trim() != "" ? <li>
+                               Location: {detail.location.replace('-', ' ')}
+                           </li> : <></>}
+                           {detail.min_affection != null ? <li>
+                               Min. Affection: {detail.min_affection}
+                           </li> : <></>}
+                           {detail.min_beauty != null ? <li>
+                               Min. Beauty: {detail.min_beauty}
+                           </li> : <></>}
+                           {detail.min_happiness != null ? <li>
+                               Min. Happiness: {detail.min_happiness}
+                           </li> : <></>}
+                           {detail.min_level != null ? <li>
+                               Level: {detail.min_level}
+                           </li> : <></>}
+                           {detail.time_of_day != null && detail.time_of_day.trim() != "" ? <li>
+                               Time of Day: {detail.time_of_day}
+                           </li> : <></>}
+                           <li>
+                               Trigger: {detail.trigger.replace('-', ' ')}
+                           </li> <br />
+                       </React.Fragment>
+                        ))}
+                    </ul>
+                    <h4>{evolution.name}</h4>
+                    <img src={evolution.details.sprites.front_default} alt={`Sprite for ${evolution.name}`} />
+                    <p>Type: {evolution.details.types.map(type => type.type.name).join(', ')}</p>
+                   
+                </div>
+            ))}
             </div>);
         }
     }
