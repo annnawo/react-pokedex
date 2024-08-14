@@ -138,7 +138,7 @@ function DetailTable({ pokemon, flavorText, genderOptions, genus, evolutionDetai
 
     useEffect(() => {
         handleChangeTab({ target: { value: 'about' } });
-    }, []);
+    });
 
     const handleChangeTab = (e) => {
         const selectedTab = e.target.value;

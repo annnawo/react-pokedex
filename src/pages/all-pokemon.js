@@ -48,6 +48,10 @@ const PaginatedPokemonList = ({ allPokemon, setAllPokemon }) => {
     cacheTime: Infinity, 
   });
 
+  const handleAdvancedFilters = () => {
+    console.log('test');
+  };
+
   // Set the `allPokemon` state only after data has been fetched
   useEffect(() => {
     if (allPokemonData) {
@@ -71,13 +75,20 @@ const PaginatedPokemonList = ({ allPokemon, setAllPokemon }) => {
   };
 
   return (
-    <div>
+    <div className="dark-grey-background">
+      <div className="main-page-navbar">
+      <h1 className="pokedex-title">Pokédex</h1>
+      <div className="search-bar-w-label"><label htmlFor="search-input-bar"></label>
+        Search by Name or Number
       <input
         type="text"
         value={searchInputText}
+    id="search-input-bar"
         onChange={(e) => setSearchInputText(e.target.value)}
-        placeholder="Search Pokemon"
       />
+</div>
+      <button onClick={handleAdvancedFilters}>Advanced Filters</button>
+      </div>
       <PokemonList currentCards={currentCards} />
       <ReactPaginate
         pageCount={Math.ceil(totalCount / 20)}

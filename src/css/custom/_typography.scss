@@ -1,0 +1,25 @@
+@font-face {
+    font-family: 'PokemonDisplay';
+    src: url('../assets/fonts/PokemonSolid.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Sansation';
+    src: url('../assets/fonts/Sansation/Sansation_Regular.ttf') format('truetype');
+}
+
+* {
+    @include std-text;
+}
+
+.pokedex-title {
+    font-family: PokemonDisplay, "Helvetica Neue", Helvetica, sans-serif;
+    font-size: 3.25rem;
+    font-size: clamp(3.25rem, 2.588235294117647rem + 1.1764705882352942vw, 4rem);
+    color: white;
+    letter-spacing: 2px;
+    font-weight: 400;
+}
+

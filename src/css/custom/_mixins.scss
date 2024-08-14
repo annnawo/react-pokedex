@@ -1,0 +1,21 @@
+@mixin std-text {
+    color: white;
+    font-family: $std-font-stack;
+    font-weight: normal;
+    font-style: normal;
+    font-size: 1rem;
+    font-size: clamp(1.2rem, 0.5rem + 1vw, 1.75rem);
+
+}
+
+@mixin std-button {
+    color: black;
+    background: $light-grey;
+    padding: .75rem 1rem;
+    border: 2px solid black;
+    border-radius: 10px;
+}
+
+button {
+    @include std-button;
+}

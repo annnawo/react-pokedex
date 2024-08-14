@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import PaginatedPokemonList from "./pages/all-pokemon.js";
 import PokemonDetails from "./pages/pokemon-detail.js";
+import './css/styles.css';
 
 const queryClient = new QueryClient();
 
