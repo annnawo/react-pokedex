@@ -5,9 +5,86 @@
     justify-content: space-between;
     align-items: center;
     padding: 1.33rem 3rem;
+    margin-bottom: 1rem;
 }   
 
 .search-bar-w-label {
     display: flex;
     flex-direction: column;
+}
+
+.all-pokemon-cards {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-evenly;
+    margin: 0 1rem;
+}
+
+.pokemon-card-div {
+    text-decoration: none;
+    text-transform: capitalize;
+    width: 30%;
+    max-width: 18rem;
+    height: 11rem;
+    margin: 1.5rem 1rem;
+    a {
+        text-decoration: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        height: 100%;
+        * {
+            color: black;
+    }}
+}
+
+.card-types {
+    ul {
+        list-style-type: none;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        margin: 0;
+        padding: 0;
+        justify-content: flex-start;
+        li {
+            width: 3rem;
+        }
+        img {
+            width: 3rem;
+            height: auto;
+        }
+
+    }
+}
+
+.card-sprite-holder {
+    width: 50%;
+    height: 70%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.pokemon-card-sprites {
+    position: absolute;
+    width: 12rem;
+    height: auto;
+}
+
+.card-name-number-types {
+    height: 100%;
+    white-space: nowrap;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: .5rem 0 .5rem .5rem;
+}
+
+.card-name-and-number {
+    margin-left: .5rem;
+    font-size: 1.25rem;
+    font-size: clamp(1.25rem, 0.5rem + 1vw, 1.75rem);
 }

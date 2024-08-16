@@ -101,7 +101,7 @@ const PaginatedPokemonList = ({ allPokemon, setAllPokemon }) => {
 };
 const PokemonList = ({ currentCards }) => {
   return (
-    <div>
+    <div className="all-pokemon-cards">
       {currentCards.map((pokemon) => (
         <PokemonCard
           key={pokemon.id}
@@ -116,22 +116,42 @@ const PokemonList = ({ currentCards }) => {
 };
 
 function PokemonCard(props) {
+  const typeBackgrounds = {
+    fire: require('../assets/images/backgrounds/fire-type-gradient.jpeg'),
+    water: require('../assets/images/backgrounds/water-type-gradient.jpg'),
+    grass: require('../assets/images/backgrounds/grass-type-gradient.jpg'),
+    
+  };
+  
+  const firstType = props.pokemonTypes[0].type.name;
+  // Get the corresponding background image
+  const backgroundImage = typeBackgrounds[firstType];
+  // Apply the background image as an inline style
+  const cardStyle = {
+    backgroundImage: `url(${backgroundImage})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    borderRadius: '15px',
+  };
+
   return (
-    <div>
+    <div className="pokemon-card-div" style={cardStyle}>
       <Link to={`/pokemon-details/${props.pokemonName.toLowerCase()}`}>
+      <div className="card-name-number-types">
         <div className="card-name-and-number">
-          <h3 className="pokemon-number">{props.pokemonNumber}</h3>
+          <h3 className="pokemon-number">#{props.pokemonNumber}</h3>
           <h2 className="pokemon-name">{props.pokemonName}</h2>
         </div>
         <div className="card-types">
           <ul>
             {props.pokemonTypes.map((typeInfo, index) => (
-              <li key={index}>{typeInfo.type.name}</li>
+              <li key={index}> <img src={require(`../assets/images/icons/${typeInfo.type.name}-type-icon.png`)} alt={typeInfo.type.name} className="type-symbol" /> </li>
             ))}
           </ul>
         </div>
-        <div>
-          <img src={props.pokemonSprites} alt={props.pokemonName} />
+        </div>
+        <div className="card-sprite-holder">
+          <img src={props.pokemonSprites} alt={props.pokemonName} className="pokemon-card-sprites" />
         </div>
       </Link>
     </div>
