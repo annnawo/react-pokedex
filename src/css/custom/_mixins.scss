@@ -5,7 +5,11 @@
     font-style: normal;
     font-size: 1rem;
     font-size: clamp(1.2rem, 0.5rem + 1vw, 1.75rem);
+}
 
+@mixin std-text-size {
+    font-size: 1.25rem;
+    font-size: clamp(1.25rem, 0.5rem + 1vw, 1.75rem);
 }
 
 @mixin std-button {

@@ -81,56 +81,66 @@ button {
   font-weight: 400;
 }
 
-#search-input-bar {
+#search-input-bar, .pokemon-card-div a * {
   color: black;
 }
 
-.main-page-navbar {
+.pokemon-card-div a {
+  text-decoration: none;
+  text-transform: capitalize;
+}
+
+.card-types ul, .pagination {
+  list-style-type: none;
+}
+
+.card-name-and-number, .pagination li {
+  font-size: 1.25rem;
+  font-size: clamp(1.25rem, 0.5rem + 1vw, 1.75rem);
+}
+
+.main-page-navbar, .search-bar-w-label, .all-pokemon-cards, .pokemon-card-div a, .card-types ul,
+.card-sprite-holder, .card-name-number-types, .pagination {
   display: flex;
+}
+
+.main-page-navbar, .pokemon-card-div a, .card-name-number-types {
+  justify-content: space-between;
+}
+
+.main-page-navbar, .all-pokemon-cards, .card-sprite-holder, .pagination {
+  align-items: center;
+}
+
+.search-bar-w-label, .card-types ul, .card-sprite-holder, .card-name-number-types {
+  flex-direction: column;
+}
+
+.main-page-navbar {
   width: 100%;
   border: solid black 5px;
-  justify-content: space-between;
-  align-items: center;
   padding: 1.33rem 3rem;
   margin-bottom: 1rem;
 }
 
-.search-bar-w-label {
-  display: flex;
-  flex-direction: column;
-}
-
 .all-pokemon-cards {
-  display: flex;
   flex-wrap: wrap;
-  align-items: center;
   justify-content: space-evenly;
   margin: 0 1rem;
 }
 
 .pokemon-card-div {
-  text-decoration: none;
-  text-transform: capitalize;
   width: 30%;
   max-width: 18rem;
   height: 11rem;
   margin: 1.5rem 1rem;
 }
 .pokemon-card-div a {
-  text-decoration: none;
-  display: flex;
-  justify-content: space-between;
   align-items: flex-end;
   height: 100%;
 }
-.pokemon-card-div a * {
-  color: black;
-}
 
 .card-types ul {
-  list-style-type: none;
-  display: flex;
-  flex-direction: column;
   align-items: flex-start;
   margin: 0;
   padding: 0;
@@ -147,9 +157,6 @@ button {
 .card-sprite-holder {
   width: 50%;
   height: 70%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
 }
 
@@ -162,26 +169,18 @@ button {
 .card-name-number-types {
   height: 100%;
   white-space: nowrap;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
   padding: 0.5rem 0 0.5rem 0.5rem;
 }
 
 .card-name-and-number {
   margin-left: 0.5rem;
-  font-size: 1.25rem;
-  font-size: clamp(1.25rem, 0.5rem + 1vw, 1.75rem);
 }
 
 .pagination {
   border: solid black 3px;
   margin-top: 1rem;
   padding: 1.75rem 3rem;
-  display: flex;
   justify-content: space-around;
-  align-items: center;
-  list-style-type: none;
 }
 .pagination li {
   border: solid white 2px;

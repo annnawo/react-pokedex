@@ -23,6 +23,19 @@
     font-weight: 400;
 }
 
-#search-input-bar {
+#search-input-bar, .pokemon-card-div a * {
     color: black;
+}
+
+.pokemon-card-div a {
+    text-decoration: none;
+    text-transform: capitalize;
+}
+
+.card-types ul, .pagination {
+    list-style-type: none;
+}
+
+.card-name-and-number, .pagination li {
+ @include std-text-size;
 }
