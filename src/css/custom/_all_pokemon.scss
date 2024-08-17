@@ -1,7 +1,7 @@
 .main-page-navbar {
     display: flex;
     width: 100%;
-    border: solid black;
+    border: solid black 5px;
     justify-content: space-between;
     align-items: center;
     padding: 1.33rem 3rem;
@@ -87,4 +87,22 @@
     margin-left: .5rem;
     font-size: 1.25rem;
     font-size: clamp(1.25rem, 0.5rem + 1vw, 1.75rem);
+}
+
+.pagination {
+    border: solid black 3px;
+    margin-top: 1rem;
+    padding: 1.75rem 3rem;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    list-style-type: none;
+    li {
+        border: solid white 2px;
+        padding: .25rem .75rem;
+        border-radius: 20px;
+        :hover {
+            cursor: pointer;
+        }
+    }
 }
