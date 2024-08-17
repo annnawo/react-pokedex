@@ -81,6 +81,10 @@ button {
   font-weight: 400;
 }
 
+#search-input-bar {
+  color: black;
+}
+
 .main-page-navbar {
   display: flex;
   width: 100%;

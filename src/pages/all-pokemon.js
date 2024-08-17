@@ -116,16 +116,17 @@ const PokemonList = ({ currentCards }) => {
 };
 
 function PokemonCard(props) {
-  const typeBackgrounds = {
-    fire: require('../assets/images/backgrounds/fire-type-gradient.jpeg'),
-    water: require('../assets/images/backgrounds/water-type-gradient.jpg'),
-    grass: require('../assets/images/backgrounds/grass-type-gradient.jpg'),
-    
-  };
+  // const typeBackgrounds = {
+  //   fire: require('../assets/images/backgrounds/fire-type-gradient.jpeg'),
+  //   water: require('../assets/images/backgrounds/water-type-gradient.jpg'),
+  //   grass: require('../assets/images/backgrounds/grass-type-gradient.jpg'),
+
+  // };
   
   const firstType = props.pokemonTypes[0].type.name;
   // Get the corresponding background image
-  const backgroundImage = typeBackgrounds[firstType];
+  // const backgroundImage = typeBackgrounds[firstType];
+  const backgroundImage = require(`../assets/images/backgrounds/${firstType}-type-gradient.jpeg`);
   // Apply the background image as an inline style
   const cardStyle = {
     backgroundImage: `url(${backgroundImage})`,
